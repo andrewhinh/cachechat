@@ -1,6 +1,2 @@
-gpt4.pdf
 .env
-PDF_Chat.ipynb
-.ipynb_checkpoints
-*.pkl
 .DS_Store

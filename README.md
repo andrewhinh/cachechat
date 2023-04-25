@@ -1,6 +1,6 @@
 # CacheChat
 
-Chat with a file, simple as that.
+Chat with any text, simple as that.
 
 ## Setup
 
@@ -12,22 +12,25 @@ Chat with a file, simple as that.
     # choco install make
     ```
 
-2. Create the conda environment locally:
+2. Create the conda environment and install pip packages locally:
 
     ```bash
+    git clone https://github.com/andrewhinh/CacheChat.git
     cd CacheChat
-    make conda-update
-    conda activate CacheChat
+    conda env update --prune -f environment.yml
+    conda activate cc
     pip install -r requirements.txt
     export PYTHONPATH=.
     echo "export PYTHONPATH=.:$PYTHONPATH" >> ~/.bashrc
     ```
 
-3. Sign up for an OpenAI account and get an API key [here](https://beta.openai.com/account/api-keys).
+3. Using `.env.template` as reference, create a `.env` file with your [OpenAI API key](https://beta.openai.com/account/api-keys), and reactivate the conda environment:
 
-4. Populate a `.env` file with your API key in the format of `.env.template`, and reactivate the environment.
+    ```bash
+    conda activate CacheChat
+    ```
 
-5. Run the application using streamlit:
+4. Run the application using streamlit:
 
    ```bash
    streamlit run app.py

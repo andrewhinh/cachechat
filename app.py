@@ -38,9 +38,6 @@ tokenizer = tiktoken.get_encoding(
 download_chunk_size = 128  # TODO: Find optimal chunk size for downloading files
 split_chunk_tokens = 300  # TODO: Find optimal chunk size for splitting text
 num_citations = 5  # TODO: Find optimal number of citations to give context to the LLM
-cosine_threshold = (
-    0.75  # TODO: Find optimal cosine similarity threshold for filtering citations
-)
 
 # Streamlit settings
 user_avatar_style = "fun-emoji"  # https://www.dicebear.com/styles
@@ -133,10 +130,17 @@ def embed_file(filename):  # Create embeddings for a file
             .encode("ascii", "ignore")  # Remove non-ascii characters
             .decode()  # Convert back to string
         )
+        os.remove(
+            filename
+        )  # Remove the file from the server since it is no longer needed
         file_source = filename
         file_chunks = split_into_many(extracted_text)  # Split the text into chunks
         file_vectors = [x["embedding"] for x in embed(file_chunks)]  # Embed the chunks
     except Exception:  # If the file cannot be extracted, return empty values
+        if os.path.exists(filename):  # If the file still exists
+            os.remove(
+                filename
+            )  # Remove the file from the server since it is no longer needed
         file_source = ""
         file_chunks = []
         file_vectors = []
@@ -249,36 +253,33 @@ def get_most_relevant(
             similarity = sources_cosine_sims[source_idx][
                 chunk_idx
             ]  # Get the cosine similarity of the chunk
-            if (
-                similarity > cosine_threshold
-            ):  # If the cosine similarity is greater than the cosine threshold
-                if len(max_cosine_sims) < num_citations:  # If max_values is not full
-                    indexes.append(
-                        [source_idx, sources_chunk_idx]
-                    )  # Add the source/chunk index pair to indexes
-                    max_cosine_sims.append(
-                        similarity
-                    )  # Add the cosine similarity to max_values
-                elif len(max_cosine_sims) == num_citations and similarity > min(
-                    max_cosine_sims
-                ):  # If max_values is full and the current cosine similarity is greater than the minimum cosine similarity in max_values
-                    indexes.append(
-                        [source_idx, sources_chunk_idx]
-                    )  # Add the source/chunk index pair to indexes
-                    max_cosine_sims.append(
-                        similarity
-                    )  # Add the cosine similarity to max_values
-                    min_idx = max_cosine_sims.index(
-                        min(max_cosine_sims)
-                    )  # Get the index of the minimum cosine similarity in max_values
-                    indexes.pop(
-                        min_idx
-                    )  # Remove the source/chunk index pair at the minimum cosine similarity index in indexes
-                    max_cosine_sims.pop(
-                        min_idx
-                    )  # Remove the minimum cosine similarity in max_values
-                else:  # If max_values is full and the current cosine similarity is less than the minimum cosine similarity in max_values
-                    pass
+            if len(max_cosine_sims) < num_citations:  # If max_values is not full
+                indexes.append(
+                    [source_idx, sources_chunk_idx]
+                )  # Add the source/chunk index pair to indexes
+                max_cosine_sims.append(
+                    similarity
+                )  # Add the cosine similarity to max_values
+            elif len(max_cosine_sims) == num_citations and similarity > min(
+                max_cosine_sims
+            ):  # If max_values is full and the current cosine similarity is greater than the minimum cosine similarity in max_values
+                indexes.append(
+                    [source_idx, sources_chunk_idx]
+                )  # Add the source/chunk index pair to indexes
+                max_cosine_sims.append(
+                    similarity
+                )  # Add the cosine similarity to max_values
+                min_idx = max_cosine_sims.index(
+                    min(max_cosine_sims)
+                )  # Get the index of the minimum cosine similarity in max_values
+                indexes.pop(
+                    min_idx
+                )  # Remove the source/chunk index pair at the minimum cosine similarity index in indexes
+                max_cosine_sims.pop(
+                    min_idx
+                )  # Remove the minimum cosine similarity in max_values
+            else:  # If max_values is full and the current cosine similarity is less than the minimum cosine similarity in max_values
+                pass
     return indexes
 
 
@@ -420,7 +421,9 @@ def main():
         st.session_state["vectors"] = []
 
     st.title("CacheChat :money_with_wings:")  # Title
-    st.markdown("Check out the repo [here](https://github.com/andrewhinh/CacheChat).")
+    st.markdown(
+        "Check out the repo [here](https://github.com/andrewhinh/CacheChat) and notes on using the app [here](https://github.com/andrewhinh/CacheChat#notes)."
+    )  # Link to repo
 
     uploaded_files = st.file_uploader(
         "Choose file(s):", accept_multiple_files=True, key="files"

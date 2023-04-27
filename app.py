@@ -143,6 +143,7 @@ def embed_file(filename):  # Create embeddings for a file
             os.remove(
                 filename
             )  # Remove the file from the server since it is no longer needed
+        source_type = ""
         file_source = ""
         file_chunks = []
         file_vectors = []
@@ -157,8 +158,8 @@ def embed_url(url):  # Create embeddings for a url
     url_vectors = []  # List of list of url embeddings (for each chunk)
     filename = ""  # Filename of the url if it is a file
 
-    if validators.url(url, public=True):  # Verify url is a valid and public
-        try:
+    try:
+        if validators.url(url, public=True):  # Verify url is a valid and public
             response = requests.get(url)  # Get the url info
             header = response.headers["Content-Type"]  # Get the header of the url
             is_application = (
@@ -202,12 +203,13 @@ def embed_url(url):  # Create embeddings for a url
                 url_vectors = [
                     x["embedding"] for x in embed(url_chunks[-1])
                 ]  # Embed the chunks
-        except Exception:  # If the url cannot be extracted, return empty values
-            url_source = ""
-            url_chunks = []
-            url_vectors = []
-    else:
-        pass
+        else:  # If url is not valid or public
+            raise Exception
+    except Exception:  # If the url cannot be extracted, return empty values
+        source_type = ""
+        url_source = ""
+        url_chunks = []
+        url_vectors = []
 
     return source_type, url_source, url_chunks, url_vectors
 

@@ -22,7 +22,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")  # Load OpenAI API key from .env fi
 
 llm_model = "gpt-3.5-turbo"  # https://platform.openai.com/docs/guides/chat/introduction
 llm_context_window = (
-    4096  # https://platform.openai.com/docs/guides/chat/managing-tokens
+    4097  # https://platform.openai.com/docs/guides/chat/managing-tokens
 )
 embed_context_window, embed_model = (
     8191,
@@ -46,9 +46,9 @@ assistant_avatar_style = "bottts-neutral"
 
 # Helper functions
 def get_num_tokens(text):  # Count the number of tokens in a string
-    return len(
-        tokenizer.encode(text, disallowed_special=())
-    )  # disallowed_special=() removes the special tokens
+    return len(tokenizer.encode(
+        text, disallowed_special=()
+    ))  # disallowed_special=() removes the special tokens)
 
 
 #   TODO:
@@ -388,8 +388,14 @@ def ask():  # Ask a question
         get_num_tokens("\n".join([message["content"] for message in messages]))
         > llm_context_window
     ):  # If the context window is too large
-        messages.pop(1)  # Remove the oldest question
-        messages.pop(2)  # Remove the oldest answer
+        if (
+            len(messages) == 2
+        ):  # If there is only the introduction message and the user's most recent question
+            max_tokens_left = llm_context_window - get_num_tokens(messages[0]["content"])  # Get the maximum number of tokens that can be present in the question
+            messages[1]["content"] = messages[1]["content"][:max_tokens_left]  # Truncate the question, from https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them 4 chars ~= 1 token, but it isn't certain that this is the case, so we will just truncate the question to max_tokens_left characters to be safe
+        else:  # If there are more than 2 messages
+            messages.pop(1)  # Remove the oldest question
+            messages.pop(2)  # Remove the oldest answer
 
     answer = openai.ChatCompletion.create(model=llm_model, messages=messages)[
         "choices"

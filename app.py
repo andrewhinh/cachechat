@@ -46,9 +46,9 @@ assistant_avatar_style = "bottts-neutral"
 
 # Helper functions
 def get_num_tokens(text):  # Count the number of tokens in a string
-    return len(tokenizer.encode(
-        text, disallowed_special=()
-    ))  # disallowed_special=() removes the special tokens)
+    return len(
+        tokenizer.encode(text, disallowed_special=())
+    )  # disallowed_special=() removes the special tokens)
 
 
 #   TODO:
@@ -130,6 +130,8 @@ def embed_file(filename):  # Create embeddings for a file
             .encode("ascii", "ignore")  # Remove non-ascii characters
             .decode()  # Convert back to string
         )
+        if not extracted_text:  # If the file is empty
+            raise Exception
         os.remove(
             filename
         )  # Remove the file from the server since it is no longer needed
@@ -191,6 +193,8 @@ def embed_url(url):  # Create embeddings for a url
                     .encode("ascii", "ignore")  # Remove non-ascii characters
                     .decode()  # Convert back to string
                 )
+                if not extracted_text:  # If the webpage is empty
+                    raise Exception
                 url_source = url
                 url_chunks = split_into_many(
                     extracted_text
@@ -391,8 +395,12 @@ def ask():  # Ask a question
         if (
             len(messages) == 2
         ):  # If there is only the introduction message and the user's most recent question
-            max_tokens_left = llm_context_window - get_num_tokens(messages[0]["content"])  # Get the maximum number of tokens that can be present in the question
-            messages[1]["content"] = messages[1]["content"][:max_tokens_left]  # Truncate the question, from https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them 4 chars ~= 1 token, but it isn't certain that this is the case, so we will just truncate the question to max_tokens_left characters to be safe
+            max_tokens_left = llm_context_window - get_num_tokens(
+                messages[0]["content"]
+            )  # Get the maximum number of tokens that can be present in the question
+            messages[1]["content"] = messages[1]["content"][
+                :max_tokens_left
+            ]  # Truncate the question, from https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them 4 chars ~= 1 token, but it isn't certain that this is the case, so we will just truncate the question to max_tokens_left characters to be safe
         else:  # If there are more than 2 messages
             messages.pop(1)  # Remove the oldest question
             messages.pop(2)  # Remove the oldest answer

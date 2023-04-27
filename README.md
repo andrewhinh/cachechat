@@ -2,6 +2,11 @@
 
 Chat about your data, simple as that. Try out the website [here](https://cachechat.pagekite.me/).
 
+## Notes
+- You don't need to upload anything to chat. It just helps the AI out, and who doesn't want to do that?
+- Once a file/URL is uploaded, it'll only be removed if you restart the conversation.
+- You can upload new files/URLs at any point in the conversation.
+
 ## Setup
 
 1. Install conda if necessary:

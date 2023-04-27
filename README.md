@@ -1,6 +1,6 @@
-# CacheChat
+# [CacheChat](https://cachechat.pagekite.me/)
 
-Chat about your data, simple as that.
+Chat about your data, simple as that. Try out the website [here](https://cachechat.pagekite.me/).
 
 ## Setup
 

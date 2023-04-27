@@ -5,6 +5,7 @@ Chat about your data, simple as that. Try out the website [here](https://cachech
 ## Notes
 
 - You don't need to upload anything to chat. It just helps the AI out, and who doesn't want to do that?
+- A list of accepted file/URL file formats can be found [here](https://textract.readthedocs.io/en/stable/#currently-supporting).
 - You can upload new files/URLs at any point in the conversation.
 - Once a file/URL is uploaded, it'll only be removed if you restart the conversation by refreshing the page.
 

@@ -223,8 +223,11 @@ def get_most_relevant(
             )
         )  # Calculate the cosine similarity between the prompt and each chunk's vector
         # Get the indices of the most relevant chunks: https://stackoverflow.com/questions/6910641/how-do-i-get-indices-of-n-maximum-values-in-a-numpy-array
-        indices = np.argpartition(cosine_sims, -num_citations)[
-            -num_citations:
+        num_chunks = min(
+            num_citations, len(cosine_sims)
+        )  # In case there are less chunks than num_citations
+        indices = np.argpartition(cosine_sims, -num_chunks)[
+            -num_chunks:
         ]  # Get the indices of the most relevant chunks
         indices = indices[np.argsort(cosine_sims[indices])]  # Sort the indices
         cosine_sims = cosine_sims[
@@ -494,7 +497,7 @@ def main():
             uploaded_question_button = st.form_submit_button(
                 label="Send"
             )  # send button
-    
+
     with response_container:
         if (
             uploaded_question_button and uploaded_question

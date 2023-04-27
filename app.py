@@ -417,6 +417,7 @@ def main():
         st.session_state["vectors"] = []
 
     st.title("CacheChat :money_with_wings:")  # Title
+    st.markdown("Check out the repo [here.](https://github.com/andrewhinh/CacheChat)")
 
     uploaded_files = st.file_uploader(
         "Choose file(s):", accept_multiple_files=True, key="files"

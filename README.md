@@ -1,6 +1,6 @@
 # CacheChat
 
-Chat with any text, simple as that.
+Chat about your data, simple as that.
 
 ## Setup
 

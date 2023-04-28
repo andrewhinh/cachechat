@@ -304,15 +304,12 @@ def ask():  # Ask a question
             "role": "system",
             "content": str(
                 "You are a helpful chatbot that answers questions a user may have about a topic. "
-                + "Sometimes, the user may give you external data from which you can use as needed. "
-                + "They will give it to you in the following way:\n"
-                + "Source 1: the source's name\n"
-                + "Text 1: the relevant text from the source\n"
-                + "Source 2: the source's name\n"
-                + "Text 2: the relevant text from the source\n"
+                + "Sometimes, they may give you external data sources from which you can use as needed. "
+                + "They will give them to you in the following way:\n"
+                + "the source's name\n"
+                + "the relevant text from the source\n\n"
                 + "...\n"
-                + "You can use this data to answer the user's questions or to ask the user questions. "
-                + "Take note that if you plan to reference a source, ALWAYS do so using the source's name.\n"
+                + "You can use this data to answer the user's questions or to ask the user questions.\n"
             ),
         },
         {"role": "user", "content": st.session_state["questions"][0]},
@@ -372,22 +369,16 @@ def ask():  # Ask a question
             messages[-1]["content"] += str(
                 "Here are some sources that may be helpful:\n"
             )  # Add the sources to the last message
-            for idx, ind in enumerate(indexes):
+            for ind in indexes:
                 source_idx, chunk_idx = ind[0], ind[1]  # Get the source and chunk index
                 messages[-1]["content"] += str(
-                    "Source "
-                    + str(idx + 1)
-                    + ": "
-                    + process_source(
+                    process_source(
                         st.session_state["sources"][source_idx],
                         st.session_state["sources_types"][source_idx],
                     )
                     + "\n"
-                    + "Text "
-                    + str(idx + 1)
-                    + ": "
                     + st.session_state["chunks"][source_idx][chunk_idx]  # Get the chunk
-                    + "\n"
+                    + "\n\n"
                 )
 
     while (

@@ -29,6 +29,7 @@ Chat about your data, simple as that. Try out the website [here](https://cachech
     pip install -r requirements.txt
     export PYTHONPATH=.
     echo "export PYTHONPATH=.:$PYTHONPATH" >> ~/.bashrc
+    # If on Windows, the last two lines probably won't work. Check out this guide for more info: https://datatofish.com/add-python-to-windows-path/
     ```
 
 3. Using `.env.template` as reference, create a `.env` file with your [OpenAI API key](https://beta.openai.com/account/api-keys), and reactivate the conda environment:

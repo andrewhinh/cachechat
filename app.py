@@ -307,7 +307,7 @@ def ask():  # Ask a question
                 + "Sometimes, they may give you external data sources from which you can use as needed. "
                 + "They will give them to you in the following way:\n"
                 + "the source's name\n"
-                + "the relevant text from the source\n\n"
+                + "the relevant text from the source\n\n\n\n\n\n\n\n\n\n"  # Multiple newlines to make sure it's understandable which sources are which
                 + "...\n"
                 + "You can use this data to answer the user's questions or to ask the user questions.\n"
             ),
@@ -378,7 +378,7 @@ def ask():  # Ask a question
                     )
                     + "\n"
                     + st.session_state["chunks"][source_idx][chunk_idx]  # Get the chunk
-                    + "\n\n"
+                    + "\n\n\n\n\n\n\n\n\n\n"  # Multiple newlines to make sure it's understandable which sources are which
                 )
 
     while (

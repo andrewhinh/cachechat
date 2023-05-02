@@ -360,8 +360,8 @@ def ask():  # Ask a question
         and st.session_state["vectors"]
     ):  # If there are sources that were uploaded
         prompt_embedding = np.array(
-            embed(st.session_state["questions"][-1])[0]["embedding"]
-        )  # Embed the last question
+            embed(messages[0]["content"] + '\n' + st.session_state["questions"][-1])[0]["embedding"]
+        )  # Embed the instruction messager and the last question
         indexes = get_most_relevant(
             prompt_embedding, st.session_state["vectors"]
         )  # Get the most relevant chunks

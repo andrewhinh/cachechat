@@ -24,20 +24,20 @@ https://github.com/andrewhinh/CacheChat/assets/40700820/ba773758-b0e4-4b5a-a436-
 2. Create the conda environment and install pip packages locally:
 
     ```bash
-    git clone https://github.com/andrewhinh/CacheChat.git
-    cd CacheChat
+    git clone https://github.com/andrewhinh/cachechat.git
+    cd cachechat
     conda env update --prune -f environment.yml
-    conda activate cc
+    conda activate cachechat
     pip install -r requirements.txt
     export PYTHONPATH=.
-    echo "export PYTHONPATH=.:$PYTHONPATH" >> ~/.bashrc
+    echo "export PYTHONPATH=.:$PYTHONPATH" >> ~/.bashrc (or ~/.zshrc)
     # If on Windows, the last two lines probably won't work. Check out this guide for more info: https://datatofish.com/add-python-to-windows-path/
     ```
 
 3. Using `.env.template` as reference, create a `.env` file with your [OpenAI API key](https://beta.openai.com/account/api-keys), and reactivate the conda environment:
 
     ```bash
-    conda activate CacheChat
+    conda activate cachechat
     ```
 
 4. Run the application using streamlit:

@@ -44,5 +44,4 @@ Chat about your data, simple as that. Try out the website [here](https://cachech
 
    ```bash
    streamlit run app.py
-   # Or `heroku local` if you have the Heroku CLI installed
    ```

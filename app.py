@@ -20,9 +20,9 @@ import validators
 load_dotenv()
 openai.api_key = os.getenv("OPENAI_API_KEY")  # Load OpenAI API key from .env file
 
-llm_model = "gpt-3.5-turbo"  # https://platform.openai.com/docs/guides/chat/introduction
+llm_model = "gpt-4-1106-preview"  # https://platform.openai.com/docs/guides/chat/introduction
 llm_context_window = (
-    4097  # https://platform.openai.com/docs/guides/chat/managing-tokens
+    128000  # https://platform.openai.com/docs/guides/chat/managing-tokens
 )
 embed_context_window, embed_model = (
     8191,

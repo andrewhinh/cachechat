@@ -1,6 +1,6 @@
 # CacheChat
 
-Chat about your data, simple as that. Try out the website [here](https://cachechat.pagekite.me/).
+Chat about your data, simple as that.
 
 <https://github.com/andrewhinh/CacheChat/assets/40700820/ba773758-b0e4-4b5a-a436-bd4426791978>
 

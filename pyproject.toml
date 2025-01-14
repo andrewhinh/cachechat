@@ -1,0 +1,19 @@
+[project]
+name = "cachechat"
+version = "0.1.0"
+description = "Chat about your data, simple as that."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "beautifulsoup4>=4.12.3",
+    "modal>=0.72.11",
+    "nltk>=3.9.1",
+    "numpy>=2.2.1",
+    "openai>=1.59.7",
+    "python-dotenv>=1.0.1",
+    "streamlit-chat>=0.1.1",
+    "streamlit>=1.41.1",
+    "textract>=1.5.0",
+    "tiktoken>=0.8.0",
+    "validators>=0.34.0",
+]

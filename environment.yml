@@ -1,7 +1,0 @@
-name: cachechat
-channels:
-  - defaults
-  - conda-forge
-dependencies:
-  - python=3.11.2
-  - pip=23.1.1

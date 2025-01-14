@@ -1,26 +1,25 @@
 # Importing the libraries
-import os
 import math
-import requests
+import os
+import uuid
 
 import bs4
-from dotenv import load_dotenv
 import nltk
 import numpy as np
-import openai
+import requests
 import streamlit as st
-from streamlit_chat import message as show_message
 import textract
 import tiktoken
-import uuid
 import validators
-
+from dotenv import load_dotenv
+from openai import OpenAI
+from streamlit_chat import message as show_message
 
 # Helper variables
 load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")  # Load OpenAI API key from .env file
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-llm_model = "gpt-4-1106-preview"  # https://platform.openai.com/docs/guides/chat/introduction
+llm_model = "gpt-4-1106-preview"
 llm_context_window = (
     128000  # https://platform.openai.com/docs/guides/chat/managing-tokens
 )
@@ -92,15 +91,17 @@ def split_into_many(text):  # Split text into chunks of a maximum number of toke
 
 def embed(prompt):  # Embed the prompt
     embeds = []
-    if type(prompt) == str:
+    if isinstance(prompt, str):
         if (
             get_num_tokens(prompt) > embed_context_window
         ):  # If token_length of prompt > context_window
             prompt = split_into_many(prompt)  # Split prompt into multiple chunks
         else:  # If token_length of prompt <= context_window
-            embeds = openai.Embedding.create(input=prompt, model=embed_model)[
-                "data"
-            ]  # Embed prompt
+            embeds = (
+                client.embeddings.create(input=prompt, model=embed_model)
+                .data[0]
+                .embedding
+            )
     if not embeds:  # If the prompt was split into/is set of chunks
         max_num_chunks = (
             embed_context_window // split_chunk_tokens
@@ -109,10 +110,12 @@ def embed(prompt):  # Embed the prompt
             0, math.ceil(len(prompt) / max_num_chunks)
         ):  # For each batch of chunks
             embeds.extend(
-                openai.Embedding.create(
+                client.embeddings.create(
                     input=prompt[i * max_num_chunks : (i + 1) * max_num_chunks],
                     model=embed_model,
-                )["data"]
+                )
+                .data[0]
+                .embedding
             )  # Embed the batch of chunks
     return embeds  # Return the list of embeddings
 
@@ -137,7 +140,7 @@ def embed_file(filename):  # Create embeddings for a file
         )  # Remove the file from the server since it is no longer needed
         file_source = filename
         file_chunks = split_into_many(extracted_text)  # Split the text into chunks
-        file_vectors = [x["embedding"] for x in embed(file_chunks)]  # Embed the chunks
+        file_vectors = embed(file_chunks)  # Embed the chunks
     except Exception:  # If the file cannot be extracted, return empty values
         if os.path.exists(filename):  # If the file still exists
             os.remove(
@@ -220,33 +223,28 @@ def get_most_relevant(
     sources_indices = []  # List of indices of the most relevant sources
     sources_cosine_sims = []  # List of cosine similarities of the most relevant sources
 
-    for (
-        source_embeddings
-    ) in (
-        sources_embeddings
-    ):  # source_embeddings contains all the embeddings of each chunk in a source
-        cosine_sims = np.array(
-            (source_embeddings @ prompt_embedding)
-            / (
-                np.linalg.norm(source_embeddings, axis=1)
-                * np.linalg.norm(prompt_embedding)
-            )
-        )  # Calculate the cosine similarity between the prompt and each chunk's vector
-        # Get the indices of the most relevant chunks: https://stackoverflow.com/questions/6910641/how-do-i-get-indices-of-n-maximum-values-in-a-numpy-array
-        num_chunks = min(
-            num_citations, len(cosine_sims)
-        )  # In case there are less chunks than num_citations
-        indices = np.argpartition(cosine_sims, -num_chunks)[
-            -num_chunks:
-        ]  # Get the indices of the most relevant chunks
-        indices = indices[np.argsort(cosine_sims[indices])]  # Sort the indices
-        cosine_sims = cosine_sims[
-            indices
-        ]  # Get the cosine similarities of the most relevant chunks
-        sources_indices.append(indices)  # Add the indices to sources_indices
-        sources_cosine_sims.append(
-            cosine_sims
-        )  # Add the cosine similarities to sources_cosine_sims
+    cosine_sims = np.array(
+        (sources_embeddings @ prompt_embedding)
+        / (
+            np.linalg.norm(sources_embeddings, axis=1)
+            * np.linalg.norm(prompt_embedding)
+        )
+    )  # Calculate the cosine similarity between the prompt and each chunk's vector
+    # Get the indices of the most relevant chunks: https://stackoverflow.com/questions/6910641/how-do-i-get-indices-of-n-maximum-values-in-a-numpy-array
+    num_chunks = min(
+        num_citations, len(cosine_sims)
+    )  # In case there are less chunks than num_citations
+    indices = np.argpartition(cosine_sims, -num_chunks)[
+        -num_chunks:
+    ]  # Get the indices of the most relevant chunks
+    indices = indices[np.argsort(cosine_sims[indices])]  # Sort the indices
+    cosine_sims = cosine_sims[
+        indices
+    ]  # Get the cosine similarities of the most relevant chunks
+    sources_indices.append(indices)  # Add the indices to sources_indices
+    sources_cosine_sims.append(
+        cosine_sims
+    )  # Add the cosine similarities to sources_cosine_sims
 
     # Use sources_indices and sources_cosine_sims to get the most relevant sources/chunks
     indexes = []
@@ -266,8 +264,9 @@ def get_most_relevant(
                 max_cosine_sims.append(
                     similarity
                 )  # Add the cosine similarity to max_values
-            elif len(max_cosine_sims) == num_citations and similarity > min(
-                max_cosine_sims
+            elif (
+                len(max_cosine_sims) == num_citations
+                and similarity > min(max_cosine_sims)
             ):  # If max_values is full and the current cosine similarity is greater than the minimum cosine similarity in max_values
                 indexes.append(
                     [source_idx, sources_chunk_idx]
@@ -360,7 +359,7 @@ def ask():  # Ask a question
         and st.session_state["vectors"]
     ):  # If there are sources that were uploaded
         prompt_embedding = np.array(
-            embed(messages[0]["content"] + '\n' + st.session_state["questions"][-1])[0]["embedding"]
+            embed(messages[0]["content"] + "\n" + st.session_state["questions"][-1])
         )  # Embed the instruction messager and the last question
         indexes = get_most_relevant(
             prompt_embedding, st.session_state["vectors"]
@@ -397,13 +396,12 @@ def ask():  # Ask a question
         else:  # If there are more than 2 messages
             messages.pop(1)  # Remove the oldest question
             messages.pop(2)  # Remove the oldest answer
-
-    answer = openai.ChatCompletion.create(model=llm_model, messages=messages)[
-        "choices"
-    ][0]["message"][
-        "content"
-    ]  # Get the answer from the chatbot
-    st.session_state["answers"].append(answer)  # Add the answer to answers
+    answer = (
+        client.chat.completions.create(model=llm_model, messages=messages)
+        .choices[0]
+        .message.content
+    )
+    st.session_state["answers"].append(answer)
     show_message(
         st.session_state["answers"][-1],
         key=str(uuid.uuid4()),
@@ -438,10 +436,10 @@ def main():
     if uploaded_files:  # If (a) file(s) is/are uploaded, create embeddings
         with st.spinner("Processing..."):  # Show loading spinner
             for uploaded_file in uploaded_files:
-                if not (
-                    uploaded_file.name in st.session_state["sources"]
+                if (
+                    uploaded_file.name not in st.session_state["sources"]
                 ):  # If the file has not been uploaded, process it
-                    with open(uploaded_file.name, "wb") as file:  # Save file to disk
+                    with open(uploaded_file.name, "wb") as file:
                         file.write(uploaded_file.getbuffer())
                     source_type, file_source, file_chunks, file_vectors = embed_file(
                         uploaded_file.name
@@ -490,12 +488,8 @@ def main():
 
     st.divider()  # Create a divider between the uploads and the chat
 
-    input_container = (
-        st.container()
-    )  # container for inputs/uploads, https://docs.streamlit.io/library/api-reference/layout/st.container
-    response_container = (
-        st.container()
-    )  # container for chat history, https://docs.streamlit.io/library/api-reference/layout/st.container
+    input_container = st.container()  # container for inputs/uploads, https://docs.streamlit.io/library/api-reference/layout/st.container
+    response_container = st.container()  # container for chat history, https://docs.streamlit.io/library/api-reference/layout/st.container
 
     with input_container:
         with st.form(key="question", clear_on_submit=True):  # form for question input

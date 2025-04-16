@@ -37,7 +37,7 @@ IMAGE = (
 
 MINUTES = 60  # seconds
 APP_TIMEOUT = 1 * MINUTES
-APP_CONTAINER_IDLE_TIMEOUT = 15 * MINUTES  # max
+APP_SCALEDOWN_WINDOW = 15 * MINUTES  # max
 APP_ALLOW_CONCURRENT_INPUTS = 1000  # max
 
 APP_NAME = f"{NAME}"
@@ -50,9 +50,9 @@ PORT = 8000
     image=IMAGE,
     secrets=SECRETS,
     timeout=APP_TIMEOUT,
-    container_idle_timeout=APP_CONTAINER_IDLE_TIMEOUT,
-    allow_concurrent_inputs=APP_ALLOW_CONCURRENT_INPUTS,
+    scaledown_window=APP_SCALEDOWN_WINDOW,
 )
+@modal.concurrent(max_inputs=APP_ALLOW_CONCURRENT_INPUTS)
 @modal.web_server(PORT)
 def modal_get():
     target = shlex.quote(streamlit_script_remote_path)
